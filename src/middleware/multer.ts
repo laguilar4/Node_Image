@@ -13,7 +13,7 @@ export const uploadImage = async (req:Request, res:Response, next:NextFunction):
     }
   })
   const upload = multer({ storage: storage });
-  await upload.array('file', 10)(req, res, function (err) {
+  await upload.array('file', 10)(req, res, async function (err) {
     const { folderName } = req.body;
     const files = req.files;
     //const arrayFiles = req.files![0];
@@ -23,15 +23,17 @@ export const uploadImage = async (req:Request, res:Response, next:NextFunction):
       if (!fs.existsSync(_dir)){
         fs.mkdirSync(_dir);
       }
-      files.forEach((file) =>
+      await files.forEach((file) =>
         {
           const { filename } = file;
           fs.rename(`temp/${filename}`, `${_dir}/${filename}`, function(err){
           });
         });
+        next();
     }else{
       console.log('No se encontraron archivos');
     }
+    
     //console.log(.filename);
     
     /*

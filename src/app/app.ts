@@ -28,7 +28,7 @@ export function serverDeploy()
     app.use("/api/files",fileRoutes.default);
     //carpeta publica para visualizar las imagenes
     app.use('/api/docportal/files/documents', express.static(path.join(__dirname, '../documents')));
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0',() => {
         console.log(`Server is listening on port ${PORT}`);
     });
 

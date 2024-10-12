@@ -4,6 +4,6 @@ import * as multerMiddleware from '../middleware/multer';
 
 const router = Router();
 
-router.post('/', [multerMiddleware.uploadImage]);
+router.post('/', [multerMiddleware.uploadImage], fileCtrl.saveImage);
 
 export default router;

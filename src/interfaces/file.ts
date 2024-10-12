@@ -1,6 +1,7 @@
 export interface File {
    folderName: string,
+   fileName?: string,
    description: string,
-   file: any,
+   url?: string,
    userReg: string
 }
