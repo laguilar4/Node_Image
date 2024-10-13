@@ -1,6 +1,7 @@
 import multer from 'multer';
 import { NextFunction, Request, response, Response } from 'express';
 import * as fs from 'fs';
+import path from 'path';
 
 export const uploadImage = async (req:Request, res:Response, next:NextFunction):Promise<void> => 
 {
@@ -12,48 +13,52 @@ export const uploadImage = async (req:Request, res:Response, next:NextFunction):
       cb(null, file.originalname )
     }
   })
-  const upload = multer({ storage: storage });
+  const upload = multer({ 
+    storage: storage,
+    fileFilter: (req, file, cb) => {
+      const filetypes = /jpeg|jpg|png|gif|pdf|docx|doc|xlsx/; // filetypes you will accept
+      const mimetype = filetypes.test(file.mimetype); // verify file is == filetypes you will accept
+      const extname = filetypes.test(path.extname(file.originalname)); // extract the file extension
+      // if mimetype && extname are true, then no error
+      if(mimetype && extname){
+          return cb(null, true);
+      }
+      // if mimetype or extname false, give an error of compatibilty
+      return Error;
+  }
+});
   await upload.array('file', 10)(req, res, async function (err) {
     const { folderName } = req.body;
     const files = req.files;
-    //const arrayFiles = req.files![0];
     if(Array.isArray(files))
     {
       const _dir = `src/documents/${folderName.toUpperCase()}`;
       if (!fs.existsSync(_dir)){
         fs.mkdirSync(_dir);
       }
-      await files.forEach((file) =>
+      await Promise.all(files.map(async (file) =>
         {
           const { filename } = file;
-          fs.rename(`temp/${filename}`, `${_dir}/${filename}`, function(err){
-          });
-        });
-        next();
+          try {
+            if (!fs.existsSync(`${_dir}/${filename}`)){
+              fs.rename(`temp/${filename}`, `${_dir}/${filename}`, function(err){
+                if(err){
+                  console.log(err);
+                }
+                
+              });
+              next();
+            }else
+            {
+              res.status(400).json({success: false, code: 400, message: 'El archivo que tratas de subir ya se encuentra guardado'});
+            }
+          } catch (error) {
+            res.status(400).json({success: false, code: 400, message: error});
+          }
+        }));
+       
     }else{
       console.log('No se encontraron archivos');
     }
-    
-    //console.log(.filename);
-    
-    /*
-    if(arrayFiles != undefined)
-    {
-      for(let i = 0; i >= arrayFiles.length; i++)
-      {
-
-      }
-    }
-    */
-    /*
-    if(arrayFiles != undefined)
-    {
-      arrayFiles.forEach(() =>{})
-    }
-    *
-    /*
-    fs.rename(`temp${filename}`, _dir, function(err){
-    });
-    */
   })
 }
